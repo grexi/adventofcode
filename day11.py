@@ -8,17 +8,18 @@ import time
 
 def find_possible_steps(world):
     steps = []
-    # elevator down:
+
     E = world["E"]
     FL = set(world["F"][E])
     FL.add("-")
 
+    # elevator down:
     if E != 0:    
         for el_x in FL: 
             for el_y in FL:
                 if el_x != el_y:
                     mixedel = set([x for x in [el_x, el_y] if x != '-'])
-                    if is_allowed(world, mixedel, E-1):
+                    if is_allowed(world, mixedel, E-1, True) and is_allowed(world, mixedel, E, False):
                         steps.append((mixedel, -1))
 
     # elevator up:
@@ -27,7 +28,7 @@ def find_possible_steps(world):
             for el_y in FL:
                 if el_x != el_y:
                     mixedel = set([x for x in [el_x, el_y] if x != '-'])
-                    if is_allowed(world, mixedel, E+1):
+                    if is_allowed(world, mixedel, E+1, True) and is_allowed(world, mixedel, E, False):
                         steps.append((mixedel, +1))
 
 
@@ -47,11 +48,9 @@ def find_possible_steps(world):
 debug = False
 visits = {}     
 solutions = []
-minsolution = 100000000000000
 
-def find_path(world, max_depth=10):
+def find_path(world, max_depth=100):
     global solutions
-    global minsolution
     global debug
 
     global visits
@@ -62,12 +61,7 @@ def find_path(world, max_depth=10):
     to_visit = PriorityQueue()
     to_visit.put((0, 0, world))
     while not to_visit.empty():
-
-
-
         prio, steps, world = to_visit.get()
-        if steps > minsolution:
-            continue
         i+=1
         if i%100000 == 0:
             dur = time.time() - last
@@ -122,19 +116,23 @@ def find_path(world, max_depth=10):
                 for mw in manual_steps:
                     print("%s:%s" % (mw["E"], ",".join((str(x) for x in mw["F"]))))
                 print "="*80
-                minsolution = solutions[0]
+                return
             else:
-                if steps <= max_depth and steps <= minsolution:
+                if steps <= max_depth:
                     #print("%r" % to_visit)
-                    to_visit.put((steps+1, steps+1, w))
+                    exCost = len(w["F"][0])*3 + len(w["F"][1])*2 + len(w["F"][2])*1
+                    to_visit.put((steps+exCost, steps+1, w))
 
 
 
         
 
 
-def is_allowed(world, elements, floor):
-    allelems = world["F"][floor].union(elements) 
+def is_allowed(world, elements, floor, add):
+    if add:
+        allelems = world["F"][floor].union(elements) 
+    else:
+        allelems = world["F"][floor].difference(elements) 
 
     for el in allelems:
         if el[1] == "M":
@@ -157,11 +155,11 @@ def is_goal(world):
 if False:
     print("%r" %is_allowed({
             "F": [ 
-            set(["HM", "LM"]),
+            set(["BM", "RM"]),
             [],
             ],
             "E": 3
-            }, ["DM"], 0))
+            }, ["DM"], 0, True))
     sys.exit()
 test = False
 if test == True:
@@ -179,7 +177,8 @@ if test == True:
 if test == False:
     world = {
             "F": [
-            set(["PG", "PM"]), #, "EG", "EM", "DG", "DM"
+            #set(["PG", "PM"]), #v1
+            set(["PG", "PM", "EG", "EM", "DG", "DM"]), #v2
             set(["CG", "UG", "RG", "BG"]),
             set(["CM", "UM", "RM", "BM"]),
             []
@@ -187,9 +186,10 @@ if test == False:
             "E": 0,
             "parent": None
             }
-
-find_path(world, 35)
-
+start = time.time()
+find_path(world)
+end = time.time()
+print("It took %.2f seconds" % (end-start))
 solutions.sort()
 print(solutions[0])
 
