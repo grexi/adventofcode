@@ -22,10 +22,10 @@ def marblegame(player, marbles):
     return max(scores)
 
 
-print(marblegame(9, 25))    
-print(marblegame(10, 1618))
-print(marblegame(13, 7999))
-print(marblegame(17, 1104))
+#print(marblegame(9, 25))    
+#print(marblegame(10, 1618))
+#print(marblegame(13, 7999))
+#print(marblegame(17, 1104))
 
 print(marblegame(470, 72170))
 print(marblegame(470, 7217000))
